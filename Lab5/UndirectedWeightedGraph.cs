@@ -198,8 +198,7 @@ public class UndirectedWeightedGraph
         var node2 = FindNode(node2name);
 
         // 2. Do all the path finding computation/generation
-        DFSVisit(node1, node2, pred);
-
+        var resultsDictionary = DFS(startingNode)
         // 3. Post-process the data structures and convert them to the right format.
 
         /*
