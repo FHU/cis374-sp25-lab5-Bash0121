@@ -1,0 +1,12 @@
+# names of the nodes
+a  b  c  d e
+
+# edges and weights 
+a b 2
+b c 5
+
+b e 3
+b d 1
+
+# 1 connected component
+# a and c are reachable

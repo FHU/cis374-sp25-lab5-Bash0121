@@ -98,19 +98,21 @@ namespace Lab5
 
         public int ConnectedComponents
         {
-            get
+           
+            get 
             {
-                int numConnectedComponents = 0;
+                 Dictionary<Node, Node> pred = new Dictionary<Node, Node>();
+                int CCcount = 0;
 
-                // choose a random vertex
-                // do a DFS from that vertex
-                // increment the CC count
-                // choose a random vertex that is white (unvisited)
-                // do a DFS from that vertex
-                // increment the CC count
-                // choose a random vertex that is white (unvisited)
-
-                return numConnectedComponents;
+                foreach (var node in Nodes)
+                {
+                    if (node.Color==Color.White)
+                    {
+                        DFSVisit(node, pred);
+                        CCcount++;
+                    }
+                }
+                return CCcount;
             }
         }
 

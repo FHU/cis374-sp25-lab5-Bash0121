@@ -117,5 +117,80 @@ public class UnitTests
 
         Assert.AreEqual(2, undirectedGraph.ConnectedComponents);
     }
-}
 
+    [TestMethod]
+    public void TestDFSPathBetween()
+    {
+        UndirectedWeightedGraph weightedGraph = new UndirectedWeightedGraph("../../../graphs/graph1-weighted.txt");
+        List<Node> pathList;
+        int cost1 = weightedGraph.DFSPathBetween("a", "c", out pathList);
+        Assert.IsTrue(cost1 > 0);
+        Assert.AreEqual("a", pathList.First().Name);
+        Assert.AreEqual("c", pathList.Last().Name);
+        int cost2 = weightedGraph.DFSPathBetween("b", "e", out pathList);
+        Assert.IsTrue(cost2 > 0);
+        Assert.AreEqual("b", pathList.First().Name);
+        Assert.AreEqual("e", pathList.Last().Name);
+    }
+
+    [TestMethod]
+    public void TestBFSPathBetween()
+    {
+        UndirectedWeightedGraph weightedGraph = new UndirectedWeightedGraph("../../../graphs/graph1-weighted.txt");
+        List<Node> pathList;
+        int cost1 = weightedGraph.BFSPathBetween("a", "c", out pathList);
+        Assert.IsTrue(cost1 > 0);
+        Assert.AreEqual("a", pathList.First().Name);
+        Assert.AreEqual("c", pathList.Last().Name);
+        int cost2 = weightedGraph.BFSPathBetween("b", "e", out pathList);
+        Assert.IsTrue(cost2 > 0);
+        Assert.AreEqual("b", pathList.First().Name);
+        Assert.AreEqual("e", pathList.Last().Name);
+    }
+
+    [TestMethod]
+    public void TestDijkstraAlgorithm()
+    {
+        UndirectedWeightedGraph weightedGraph = new UndirectedWeightedGraph("../../../graphs/graph1-weighted.txt");
+        var startNode = weightedGraph.Nodes.FirstOrDefault(n => n.Name == "a");
+        if (startNode == null)
+        {
+            throw new Exception();
+        }
+        var dijkstraResults = weightedGraph.Dijkstra(startNode);
+        Assert.AreEqual(weightedGraph.Nodes.Count, dijkstraResults.Count);
+        Assert.AreEqual(0, dijkstraResults[startNode].cost);
+        Assert.IsNull(dijkstraResults[startNode].pred);
+        foreach (var node in weightedGraph.Nodes)
+        {
+            var (pred, cost) = dijkstraResults[node];
+            if (node == startNode) continue;
+            Assert.IsTrue(cost >= 0);
+            if (cost == int.MaxValue)
+            {
+                Assert.IsNull(pred);
+            }
+            else
+            {
+                Assert.IsNotNull(pred);
+                Assert.IsTrue(weightedGraph.Nodes.Contains(pred));
+            }
+        }
+    }
+
+    [TestMethod]
+    public void TestDijkstraPathBetween()
+    {
+        UndirectedWeightedGraph weightedGraph = new UndirectedWeightedGraph("../../../graphs/graph1-weighted.txt");
+        List<Node> pathList;
+        int cost1 = weightedGraph.DijkstraPathBetween("a", "c", out pathList);
+        Assert.IsTrue(cost1 > 0);
+        Assert.AreEqual("a", pathList.First().Name);
+        Assert.AreEqual("c", pathList.Last().Name);
+        int cost2 = weightedGraph.DijkstraPathBetween("b", "e", out pathList);
+        Assert.IsTrue(cost2 > 0);
+        Assert.AreEqual("b", pathList.First().Name);
+        Assert.AreEqual("e", pathList.Last().Name);
+    }
+
+}

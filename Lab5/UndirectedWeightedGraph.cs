@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using System.Transactions;
 
 namespace Lab5;
 
@@ -98,19 +99,20 @@ public class UndirectedWeightedGraph
 
     public int ConnectedComponents
     {
-        get
+        get 
         {
-            int numConnectedComponents = 0;
+            Dictionary<Node, Node> pred = new Dictionary<Node, Node>();
+            int CCcount = 0;
 
-            // choose a random vertex
-            // do a DFS from that vertex
-            // increment the CC count
-            // choose a random vertex that is white (unvisited)
-            // do a DFS from that vertex
-            // increment the CC count
-            // choose a random vertex that is white (unvisited)
-
-            return numConnectedComponents;
+            foreach (var node in Nodes)
+            {
+                if (node.Color==Color.White)
+                {
+                    DFSVisit(node, pred);
+                    CCcount++;
+                }
+            }
+            return CCcount;
         }
     }
 
@@ -173,56 +175,38 @@ public class UndirectedWeightedGraph
     /// <returns>The total cost of the weights in the path</returns>
     public int DFSPathBetween(string node1name, string node2name, out List<Node> pathList)
     {
-        // 1. initilize all the things 
         pathList = new List<Node>();
 
-        // pred[] => node name to its predecessor node
-        Dictionary<string, Node> pred = new Dictionary<string, Node>();
-        // add every node name to the dictionary with a null pred.
-        foreach (var node in Nodes)
+        var node1 = GetNodeByName(node1name);
+        var node2 = GetNodeByName(node2name);
+
+        if (node1 == null || node2 == null)
+        {throw new Exception("");}
+
+        var pred = DFS(node1);
+
+        if (pred[node2]==null)
+        {return 0;}
+
+        Node current = node2;
+        int cost = 0;
+
+        while (current != null)
         {
-            pred[node.Name] = null;
+            pathList.Add(current);
+
+            var Predecessor = pred[current];
+
+            if (Predecessor != null)
+            {
+                var neighbor = Predecessor.Neighbors.FirstOrDefault(n => n.Node == current);
+                if (neighbor != null)
+                {cost += neighbor.Weight;}
+            }
+            current = Predecessor;
         }
-
-        // dist[] => node name to distance from the source node
-        Dictionary<string, int> dist = new Dictionary<string, int>();
-        // setup all distances to infinity
-        foreach (var node in Nodes)
-        {
-            dist[node.Name] = int.MaxValue;
-        }
-
-        // initialize all colors to white
-
-        var node1 = FindNode(node1name);
-        var node2 = FindNode(node2name);
-
-        // 2. Do all the path finding computation/generation
-        var resultsDictionary = DFS(startingNode)
-        // 3. Post-process the data structures and convert them to the right format.
-
-        /*
-            * PRED 
-            * a -> c
-            * c -> d
-            * d -> s 
-            *
-            *  s -> t 
-            */
-
-        // pathList = s, d, c, a
-        //int cost = 0;
-        //currentNode = endNode
-        //for ...
-        //    pathList.Add(currentNode)
-        //    predNode = pred[currentNode]
-        //    weight = predNode.neighbors[currentNode].weight
-        //    cost += weight
-        //    currentNode = predNode
-
-        //return cost;
-
-        return 0;
+        pathList.Reverse();
+        return cost;
     }
 
     private void DFSVisit(Node node, Dictionary<Node, Node> pred)
@@ -261,28 +245,21 @@ public class UndirectedWeightedGraph
     {
         var resultsDictionary = new Dictionary<Node, (Node pred, int dist)>();
 
-        // initialize the dictionary 
         foreach (var node in Nodes)
         {
             node.Color = Color.White;
             resultsDictionary[node] = (null, int.MaxValue);
         }
-
-        // setting up the starting node
         startingNode.Color = Color.Gray;
         resultsDictionary[startingNode] = (null, 0);
 
-        // create a queue
         Queue<Node> queue = new Queue<Node>();
         queue.Enqueue(startingNode);
 
-        // iteratively process the graph (neighbors of the nodes in the queue)
         while (queue.Count > 0)
         {
-            // get the front of queue 
             var node = queue.Peek();
 
-            // sort the neighbors so that we visit them in alpha order
             node.Neighbors.Sort();
 
             foreach (var neighbor in node.Neighbors)
@@ -315,22 +292,80 @@ public class UndirectedWeightedGraph
     {
         pathList = new List<Node>();
 
+        var start = GetNodeByName(node1);
+        var end = GetNodeByName(node2);
 
-        return 0;
+        if (node1 == null || node2 == null)
+        {throw new Exception("");}
+
+        var pred = BFS(start);
+       
+        if (!pred.ContainsKey(end))
+        {return 0;}
+
+        Node current = end;
+        int cost = 0;
+
+        while (current != null)
+        {
+            pathList.Add(current);
+            var (Predecessor, dist) = pred[current];
+
+            if (Predecessor != null)
+            {
+                var neighbor = Predecessor.Neighbors.FirstOrDefault(n => n.Node == current);
+                if (neighbor != null)
+                {cost += neighbor.Weight;}
+            }
+            current = Predecessor;
+        }
+        pathList.Reverse();
+        return cost;
     }
 
 
     public Dictionary<Node, (Node pred, int cost)> Dijkstra(Node startingNode)
     {
-        // PriorityQueue<Neighbor, int> priorityQueue = new PriorityQueue<Neighbor, int>();
-        // var neightbor = new Neighbor(){ Node= new Node(), Weight= 4};
+        var priority = new PriorityQueue<Node, int>();
+        var results = new Dictionary<Node, (Node pred, int cost)>();
 
-        // priorityQueue.Enqueue( neightbor, neightbor.Weight + currentCost);
+        foreach (var node in Nodes)
+        {
+            results[node] = (null, int.MaxValue);
+            node.Color=Color.White;
+        }
 
-        // HashSet<Node> visited = new HashSet<Node>();    
+        results[startingNode] = (null, 0);
+        priority.Enqueue(startingNode, 0);
+        startingNode.Color=Color.Gray;
 
+        while (priority.Count > 0)
+        {
+            var currentNode = priority.Dequeue();
+            int currentcost = results[currentNode].cost;
 
-        return null;
+            if (currentNode.Color == Color.Black)
+            {continue;}
+
+            currentNode.Color=Color.Black;
+            currentNode.Neighbors.Sort();
+
+            foreach (var Neighbor in currentNode.Neighbors)
+            {
+                var neighborNode = Neighbor.Node;
+                if (neighborNode.Color == Color.Black)
+                {continue;}
+                int newcost = currentcost + Neighbor.Weight;
+
+                if (newcost < results[neighborNode].cost)
+                {
+                    results[neighborNode] =(currentNode, newcost);
+                    priority.Enqueue(neighborNode, newcost);
+                    neighborNode.Color=Color.Gray;
+                }
+            }
+        }
+        return results;
     }
 
     /// <summary>
@@ -345,7 +380,35 @@ public class UndirectedWeightedGraph
     {
         pathList = new List<Node>();
 
-        return 0;
+        var start = GetNodeByName(node1);
+        var end = GetNodeByName(node2);
+
+        if (node1 == null || node2 == null)
+        {throw new Exception("");}
+
+        var pred = Dijkstra(start);
+       
+        if (!pred.ContainsKey(end))
+        {return 0;}
+
+        Node current = end;
+        int cost = 0;
+
+        while (current != null)
+        {
+            pathList.Add(current);
+            var (Predecessor, dist) = pred[current];
+
+            if (Predecessor != null)
+            {
+                var neighbor = Predecessor.Neighbors.FirstOrDefault(n => n.Node == current);
+                if (neighbor != null)
+                {cost += neighbor.Weight;}
+            }
+            current = Predecessor;
+        }
+        pathList.Reverse();
+        return cost;
     }
 
 }

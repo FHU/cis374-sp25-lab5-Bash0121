@@ -12,7 +12,7 @@ public class Neighbor : IComparable<Neighbor>
 
     public int CompareTo(Neighbor? other)
     {
-        return this.CompareTo(other);
+		return this.Node.CompareTo(other.Node);
     }
 }
 
